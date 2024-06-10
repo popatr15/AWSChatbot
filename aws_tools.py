@@ -2,12 +2,12 @@ import boto3
 from langchain.tools import tool
 from apikey import aws_key_id, aws_secret_key
 
+#setup all the AWS boto3 clients to access information
 s3 = boto3.client(
     's3',
     region_name='us-east-2',
     aws_access_key_id= aws_key_id,
-    aws_secret_access_key=aws_secret_key
-)
+    aws_secret_access_key=aws_secret_key)
 
 ec2 = boto3.client("ec2",
     region_name='us-east-2',
@@ -22,7 +22,7 @@ iam = boto3.client("iam",
 @tool
 def PublicS3BucketsTool(query: str) -> str:
     """
-    get the number of public s3 storage buckets 
+    Get the number of public s3 storage buckets 
     """
     response = s3.list_buckets()
     public_buckets = []
@@ -46,7 +46,7 @@ def GetAllS3Buckets(query: str) -> str:
     
     bucket_names = [bucket['Name'] for bucket in response['Buckets']]
     
-    # Prepare the output
+    # Format output string
     output = f"There are {len(bucket_names)} S3 buckets:\n "
     output += "\n".join(bucket_names)
     
@@ -54,7 +54,8 @@ def GetAllS3Buckets(query: str) -> str:
 
 @tool
 def S3BucketContentsTool(bucket_name: str) -> str:
-    """Get the contents of the S3 storage bucket
+    """
+    Get the contents of the S3 storage bucket
     """
     response = s3.list_objects_v2(Bucket=bucket_name)
     if 'Contents' not in response:
@@ -69,7 +70,6 @@ def GetAllEC2InstancesTool(query: str) -> str:
     """
     Get a list of all EC2 compute instances.
     """
-
     response = ec2.describe_instances()
     instances = []
     
@@ -85,23 +85,11 @@ def GetAllEC2InstancesTool(query: str) -> str:
     return f"The following EC2 instances were found: \n {'\n '.join(instances)}" if instances else "No EC2 instances were found."
 
 @tool
-def GetAllUsersTool(query: str) -> str:
-    """
-    Get a list of all users.
-    """
-    
-    response = iam.list_users()
-    users = [user['UserName'] for user in response['Users']]
-    response = f"The following IAM users were found: {'\n '.join(users)}" if users else "No IAM users were found."
-    return response
-
-
-@tool
 def EC2InstanceSizeTool (instance_ip: str) -> str:
     """
     Get the size of a ec2 instance from its ip address.
     """
-    
+    # only get the ec2 instance with the given IP address
     response = ec2.describe_instances(
     Filters=[{'Name': 'ip-address', 'Values': [instance_ip]}])
     
@@ -112,18 +100,30 @@ def EC2InstanceSizeTool (instance_ip: str) -> str:
     return f"The EC2 instance with IP {instance_ip} is of type {instance_type}."
 
 @tool
+def GetAllUsersTool(query: str) -> str:
+    """
+    Get a list of all users.
+    """
+    response = iam.list_users()
+    users = [user['UserName'] for user in response['Users']]
+    response = f"The following IAM users were found: {'\n '.join(users)}" if users else "No IAM users were found."
+    return response
+
+@tool
 def UserPermissionsTool(username: str) -> str:
     """
     Get permissions for a specific user.
     """
-    
     response = iam.list_users()
     users = [user['UserName'] for user in response['Users']]
     if (username not in users):
         return f"{username} cannot be found in the list of users for this account."
+    
+    # get the policies directly attached to the user.
     response = iam.list_attached_user_policies(UserName=username)
     policies = [policy['PolicyName'] for policy in response['AttachedPolicies']]
     
+    # get the policies that are attached to the groups that a user is in.
     response = iam.list_groups_for_user(UserName=username)
     groups = [group['GroupName'] for group in response['Groups']]
     for group in groups:
@@ -134,9 +134,6 @@ def UserPermissionsTool(username: str) -> str:
     policies = list(set(policies))
 
     return f"The user {username} has the following attached policies: \n {'\n'.join(policies)}"
-
-
-# print(UserPermissionsTool.invoke('rpopat'))
 
 aws_tools = [
             PublicS3BucketsTool,
