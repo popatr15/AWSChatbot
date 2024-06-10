@@ -1,4 +1,59 @@
-__pycache__  
-aws_chatbot_env
-path
+# Ignore Python bytecode files
+__pycache__/
+*.py[cod]
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Ignore environment files
+.env
+*.env
+
+# Ignore Python virtual environments
+venv/
+env/
+.venv/
+.pyenv/
+.Python
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+
+# Ignore log files and databases
+*.log
+*.sql
+*.sqlite
+
+# Ignore configuration files
+config.py
+secrets.py
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Ignore build files
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+# Ignore other unwanted files
+*.swp
+*~
+
 misc
